@@ -8,9 +8,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +22,7 @@ import emissary.config.ServiceConfigGuide;
 import emissary.core.BaseDataObject;
 import emissary.core.DataObjectFactory;
 import emissary.core.IBaseDataObject;
+import emissary.output.DropOffUtil.ArrayListMap;
 import emissary.test.core.UnitTest;
 import emissary.util.TimeUtil;
 import org.junit.After;
@@ -501,6 +504,64 @@ public class DropOffUtilTest extends UnitTest {
         metadata.clear();
         formsArg = "QUOTED-PRINTABLE";
         testFileType(metadata, "TEXT", formsArg);
+    }
+
+    @Test
+    public void testArrayListMap() {
+        final Map<String, String> alm1 = new ArrayListMap<>();
+        final Map<String, String> alm2 = new ArrayListMap<>();
+        final Map<String, String> lhm = new LinkedHashMap<>();
+
+        assertNull(alm1.get("AAA"));
+        assertNull(lhm.get("AAA"));
+
+        compareMaps(alm1, lhm);
+
+        alm1.put("AAA", "111");
+        alm2.put("AAA", "111");
+        lhm.put("AAA", "111");
+
+        compareMaps(alm1, lhm);
+        assertEquals(alm1, alm2);
+        assertEquals(alm1.hashCode(), alm2.hashCode());
+
+        alm1.put("BBB", "222");
+        alm2.put("BBB", "222");
+        lhm.put("BBB", "222");
+
+        compareMaps(alm1, lhm);
+        assertEquals(alm1, alm2);
+        assertEquals(alm1.hashCode(), alm2.hashCode());
+
+        alm1.put("CCC", "333");
+        alm2.put("CCC", "333");
+        lhm.put("CCC", "333");
+
+        compareMaps(alm1, lhm);
+        assertEquals(alm1, alm2);
+        assertEquals(alm1.hashCode(), alm2.hashCode());
+
+        alm1.put("CCC", "444");
+        alm2.put("CCC", "444");
+        lhm.put("CCC", "444");
+
+        compareMaps(alm1, lhm);
+        assertEquals(alm1, alm2);
+        assertEquals(alm1.hashCode(), alm2.hashCode());
+        assertNotEquals(alm1, lhm);
+
+        alm2.put("DDD", "555");
+        assertNotEquals(alm1, alm2);
+        assertNotEquals(alm1.hashCode(), alm2.hashCode());
+        alm1.put("DDD", "444");
+        assertNotEquals(alm1, alm2);
+        assertNotEquals(alm1.hashCode(), alm2.hashCode());
+    }
+
+    private static void compareMaps(Map<String, String> m1, Map<String, String> m2) {
+        assertEquals(m1.size(), m2.size());
+        assertTrue(Arrays.deepEquals(m1.keySet().toArray(), m2.keySet().toArray()));
+        assertTrue(Arrays.deepEquals(m1.values().toArray(), m2.values().toArray()));
     }
 
     private void setupMetadata(Map<String, String> metadata, String fieldValue, DropOffUtil.FileTypeCheckParameter fileTypeCheckParameter) {

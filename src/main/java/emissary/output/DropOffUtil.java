@@ -5,14 +5,18 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 import java.util.SimpleTimeZone;
 import java.util.UUID;
 
@@ -995,6 +999,82 @@ public class DropOffUtil {
         return date;
     }
 
+    public static class ArrayListMap<K, V> extends AbstractMap<K, V> {
+        private List<K> keyList = new ArrayList<>();
+        private List<V> valueList = new ArrayList<>();
+
+        @Override
+        public V put(K key, V value) {
+            final int keyIndex = keyList.indexOf(key);
+
+            if (keyIndex < 0) {
+                keyList.add(key);
+                valueList.add(value);
+
+                return null;
+            } else {
+                return valueList.set(keyIndex, value);
+            }
+        }
+
+        @Override
+        public V get(Object key) {
+            final int keyIndex = keyList.indexOf(key);
+
+            return (keyIndex < 0) ? null : valueList.get(keyIndex);
+        }
+
+        @Override
+        public void clear() {
+            keyList.clear();
+            valueList.clear();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return keyList.contains(key);
+        }
+
+        @Override
+        public Set<Map.Entry<K, V>> entrySet() {
+            Set<Map.Entry<K, V>> set = new LinkedHashSet<>(keyList.size());
+
+            for (int i = 0; i < keyList.size(); i++) {
+                set.add(new SimpleEntry<>(keyList.get(i), valueList.get(i)));
+            }
+
+            return set;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean equals(Object o) {
+            return o instanceof ArrayListMap &&
+                    Objects.equals(keyList, ((ArrayListMap<K, V>) o).keyList) &&
+                    Objects.equals(valueList, ((ArrayListMap<K, V>) o).valueList);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(keyList, valueList);
+        }
+
+        @Override
+        public int size() {
+            return keyList.size();
+        }
+    }
+
+    private Map<String, String> getCookedParameters(final IBaseDataObject ibdo, final Map<String, String> cookedParameters) {
+        cookedParameters.clear();
+
+        for (final String key : ibdo.getParameterKeys()) {
+            cookedParameters.put(key, ibdo.getStringParameter(key));
+        }
+
+        return cookedParameters;
+    }
+
     /**
      * Process metadata before doing any output
      *
@@ -1006,6 +1086,7 @@ public class DropOffUtil {
         // relies on the attachments being sorted
         final Map<String, String> parentTypes = new HashMap<String, String>();
         final IBaseDataObject tld = payloadList.get(0);
+        final Map<String, String> cookedParameters = new ArrayListMap<>();
         parentTypes.put("1", tld.getFileType());
         for (final String param : this.parentParams) {
             if (tld.hasParameter(param)) {
@@ -1043,7 +1124,7 @@ public class DropOffUtil {
                     }
                 }
                 if (extended_filetypes.size() > 0) {
-                    final StringBuilder extft = new StringBuilder(getFileType(p.getCookedParameters()));
+                    final StringBuilder extft = new StringBuilder(getFileType(getCookedParameters(p, cookedParameters)));
                     for (final String s : extended_filetypes) {
                         extft.append("//").append(s);
                     }
