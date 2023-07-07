@@ -4,9 +4,10 @@ import emissary.core.BaseDataObject;
 import emissary.core.DiffCheckConfiguration;
 import emissary.core.IBaseDataObject;
 import emissary.core.IBaseDataObjectHelper;
-import emissary.core.IBaseDataObjectXmlHelper;
 import emissary.core.channels.FileChannelFactory;
 import emissary.core.channels.SeekableByteChannelFactory;
+import emissary.core.serialization.IBDOXmlHelper;
+import emissary.core.serialization.XmlElementNames;
 import emissary.kff.KffDataObjectHandler;
 import emissary.util.PlaceComparisonHelper;
 import emissary.util.io.ResourceReader;
@@ -81,12 +82,12 @@ public class RegressionTestUtil {
     public static void checkAnswers(final Document answers, final IBaseDataObject payload,
             final List<IBaseDataObject> attachments, final String tname, final String placeName) throws DataConversionException {
         final Element root = answers.getRootElement();
-        final Element parent = root.getChild(IBaseDataObjectXmlHelper.ANSWERS_ELEMENT_NAME);
+        final Element parent = root.getChild(XmlElementNames.ANSWERS);
 
         assertNotNull(parent, "No 'answers' section found!");
 
         final List<IBaseDataObject> expectedAttachments = new ArrayList<>();
-        final IBaseDataObject expectedIbdo = IBaseDataObjectXmlHelper.ibdoFromXml(answers, expectedAttachments);
+        final IBaseDataObject expectedIbdo = IBDOXmlHelper.ibdoFromXml(answers, expectedAttachments);
         final String differences = PlaceComparisonHelper.checkDifferences(expectedIbdo, payload, expectedAttachments,
                 attachments, placeName, DIFF_CHECK);
 
@@ -139,7 +140,7 @@ public class RegressionTestUtil {
     public static void writeAnswerXml(final String resource, final IBaseDataObject initialIbdo, final IBaseDataObject finalIbdo,
             final List<IBaseDataObject> results) {
         // Generate the full XML (setup & answers from before & after)
-        final String xmlContent = IBaseDataObjectXmlHelper.xmlFromIbdo(finalIbdo, results, initialIbdo);
+        final String xmlContent = IBDOXmlHelper.xmlFromIbdo(finalIbdo, results, initialIbdo);
         // Write out the XML to disk
         writeXml(resource, xmlContent);
     }
@@ -172,14 +173,14 @@ public class RegressionTestUtil {
         final Element root = answers.getRootElement();
 
         if (root != null) {
-            final Element parent = root.getChild(IBaseDataObjectXmlHelper.SETUP_ELEMENT_NAME);
+            final Element parent = root.getChild(XmlElementNames.SETUP);
 
             if (parent != null) {
                 payload.popCurrentForm(); // Remove default form put on by ExtractionTest.
                 payload.setFileType(null); // Remove default filetype put on by ExtractionTest.
                 // The only other fields set are data and filename.
 
-                IBaseDataObjectXmlHelper.ibdoFromXmlMainElements(parent, payload);
+                IBDOXmlHelper.ibdoFromXmlMainElements(parent, payload);
             }
         }
     }
@@ -234,7 +235,7 @@ public class RegressionTestUtil {
             final InitialFinalFormFormat datFile = new InitialFinalFormFormat(datFileUrl);
             final SeekableByteChannelFactory sbcf = FileChannelFactory.create(datFile.getPath());
             // Create a BDO for the data, and set the filename correctly
-            final IBaseDataObject initialIbdo = IBaseDataObjectXmlHelper.createStandardInitialIbdo(sbcf, "Classification",
+            final IBaseDataObject initialIbdo = IBDOXmlHelper.createStandardInitialIbdo(sbcf, "Classification",
                     datFile.getInitialForm(), kff);
             initialIbdo.setChannelFactory(sbcf);
             initialIbdo.setFilename(datFile.getOriginalFileName());

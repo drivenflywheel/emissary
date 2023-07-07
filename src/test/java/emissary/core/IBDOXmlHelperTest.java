@@ -2,6 +2,7 @@ package emissary.core;
 
 import emissary.core.channels.InMemoryChannelFactory;
 import emissary.core.channels.SeekableByteChannelFactory;
+import emissary.core.serialization.IBDOXmlHelper;
 import emissary.kff.KffDataObjectHandler;
 import emissary.test.core.junit5.UnitTest;
 import emissary.util.PlaceComparisonHelper;
@@ -25,7 +26,7 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class IBaseDataObjectXmlHelperTest extends UnitTest {
+class IBDOXmlHelperTest extends UnitTest {
     @Test
     void testParentIbdoNoFieldsChanged() throws Exception {
         final IBaseDataObject initialIbdo = new BaseDataObject();
@@ -186,12 +187,12 @@ class IBaseDataObjectXmlHelperTest extends UnitTest {
 
         priorityIbdo.setPriority(100);
 
-        final String xmlString = IBaseDataObjectXmlHelper.xmlFromIbdo(priorityIbdo, expectedChildren, initialIbdo);
+        final String xmlString = IBDOXmlHelper.xmlFromIbdo(priorityIbdo, expectedChildren, initialIbdo);
         final String newXmlString = xmlString.replace("100", "100A");
 
         final SAXBuilder builder = new SAXBuilder(XMLReaders.NONVALIDATING);
         final Document document = builder.build(new StringReader(newXmlString));
-        final IBaseDataObject actualIbdo = IBaseDataObjectXmlHelper.ibdoFromXml(document, actualChildren);
+        final IBaseDataObject actualIbdo = IBDOXmlHelper.ibdoFromXml(document, actualChildren);
 
         final String diff = PlaceComparisonHelper.checkDifferences(expectedIbdo, actualIbdo, expectedChildren,
                 actualChildren, "testBadChannelFactory", DiffCheckConfiguration.onlyCheckData());
@@ -208,12 +209,12 @@ class IBaseDataObjectXmlHelperTest extends UnitTest {
         final Object parameter = null;
         final Element element = null;
         final List<String> differences = new ArrayList<>();
-        final Method method = IBaseDataObjectXmlHelper.class.getDeclaredMethod("setParameterOnIbdo", Class.class,
+        final Method method = IBDOXmlHelper.class.getDeclaredMethod("setParameterOnIbdo", Class.class,
                 Class.class, IBaseDataObject.class, String.class, Object.class, Element.class);
 
         method.setAccessible(true);
 
-        method.invoke(IBaseDataObjectXmlHelper.class, keyClass, valueClass, ibdo, ibdoMethodName, parameter, element);
+        method.invoke(IBDOXmlHelper.class, keyClass, valueClass, ibdo, ibdoMethodName, parameter, element);
 
         method.setAccessible(false);
 
@@ -245,7 +246,7 @@ class IBaseDataObjectXmlHelperTest extends UnitTest {
         expectedIbdo.setFileType(formAndFileType);
         expectedIbdo.setClassification(classification);
 
-        final IBaseDataObject actualIbdo = IBaseDataObjectXmlHelper.createStandardInitialIbdo(sbcf, classification,
+        final IBaseDataObject actualIbdo = IBDOXmlHelper.createStandardInitialIbdo(sbcf, classification,
                 formAndFileType, kff);
 
         IBaseDataObjectDiffHelper.diff(expectedIbdo, actualIbdo, differences, DiffCheckConfiguration.onlyCheckData());
@@ -255,11 +256,11 @@ class IBaseDataObjectXmlHelperTest extends UnitTest {
 
     private static IBaseDataObject ibdoFromXmlFromIbdo(final IBaseDataObject ibdo, final List<IBaseDataObject> children,
             final IBaseDataObject initialIbdo, final List<IBaseDataObject> outputChildren) throws Exception {
-        final String xmlString = IBaseDataObjectXmlHelper.xmlFromIbdo(ibdo, children, initialIbdo);
+        final String xmlString = IBDOXmlHelper.xmlFromIbdo(ibdo, children, initialIbdo);
 
         final SAXBuilder builder = new SAXBuilder(XMLReaders.NONVALIDATING);
         final Document document = builder.build(new StringReader(xmlString));
-        final IBaseDataObject ibdo2 = IBaseDataObjectXmlHelper.ibdoFromXml(document, outputChildren);
+        final IBaseDataObject ibdo2 = IBDOXmlHelper.ibdoFromXml(document, outputChildren);
 
         return ibdo2;
     }
